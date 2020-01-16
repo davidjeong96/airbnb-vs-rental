@@ -1,0 +1,69 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(GGally)
+library(car)
+library(tm)
+library(MASS)
+library(caTools)
+library(rpart)
+library(caret)
+library(randomForest)
+OSR2 <- function(predictions, test, train) {
+  SSE <- sum((test - predictions)^2)
+  SST <- sum((test - mean(train))^2)
+  r2 <- 1 - SSE/SST
+  return(r2)
+}
+```
+
+
+```{r}
+data = read.csv('airbnb_final_dataset.csv')
+head(data)
+```
+Split into training and testing set
+```{r}
+split = sample.split(data$price, SplitRatio = 0.75)
+train = filter(data, split==TRUE)
+test = filter(data, split==FALSE)
+```
+
+
+```{r}
+lin.model = lm(price~. , data=train)
+summary(lin.model)
+vif(lin.model)
+```
+```{r}
+lin.model2 = lm(price~. -accommodates - dryer, data = train)
+summary(lin.model2)
+vif(lin.model2)
+```
+```{r}
+lin.model3 = lm(price~. - beds - accommodates - dryer, data=train)
+summary(lin.model3)
+vif(lin.model3)
+```
+
+
+```{r}
+rf_model = randomForest(price ~ . - accommodates - beds - washer, data = train)
+rf_test_pred = predict(rf_model, newdata=test)
+OSR2(rf_test_pred, test$price, train$price)
+
+```
+
+```{r}
+
+```
+
